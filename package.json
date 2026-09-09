@@ -1,0 +1,29 @@
+{
+  "name": "tc_fase05",
+  "version": "1.0.0",
+  "description": "Hackaton postech",
+  "homepage": "https://github.com/diogobest/tc_fase05#readme",
+  "bugs": {
+    "url": "https://github.com/diogobest/tc_fase05/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/diogobest/tc_fase05.git"
+  },
+  "license": "MIT",
+  "author": "Diogo Oliveira",
+  "type": "module",
+  "main": "src/app.ts",
+  "scripts": {
+    "start": "PORT=3005 node src/app.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.5.0",
+    "typescript": "^7.0.2"
+  }
+}
