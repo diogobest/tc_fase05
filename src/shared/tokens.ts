@@ -45,6 +45,7 @@ export async function verifyAccessToken(token: string, secret: string) {
     extra ||
     (await signature(`${header}.${body}`, secret)) !== supplied
   )
+
     throw new Error("invalid token");
   const payload = JSON.parse(Buffer.from(body, "base64url").toString()) as {
     sub: string;

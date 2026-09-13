@@ -58,11 +58,23 @@
         "type": "object",
         "properties": {
           "id": { "type": "string", "format": "uuid" },
+          "requesterId": { "type": "string", "format": "uuid" },
+          "assigneeId": { "type": ["string", "null"], "format": "uuid" },
+          "categoryId": { "type": "string", "format": "uuid" },
+          "categoryName": { "type": "string" },
           "title": { "type": "string" },
           "description": { "type": "string" },
+          "address": { "type": "string" },
+          "locationDetails": { "type": ["string", "null"] },
+          "latitude": { "type": ["number", "null"] },
+          "longitude": { "type": ["number", "null"] },
           "status": { "$ref": "#/components/schemas/IncidentStatus" },
           "priority": { "$ref": "#/components/schemas/IncidentPriority" },
-          "version": { "type": "integer" }
+          "solution": { "type": ["string", "null"] },
+          "resolvedAt": { "type": ["string", "null"], "format": "date-time" },
+          "version": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
         }
       },
       "RegisterInput": {
@@ -149,6 +161,107 @@
           "solution": { "type": "string", "minLength": 1 },
           "version": { "type": "integer" }
         }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "role": { "type": "string", "enum": ["requester", "manager"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" }
+        }
+      },
+      "HistoryEntry": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "type": {
+            "type": "string",
+            "enum": ["status", "assignment", "priority"]
+          },
+          "previousValue": { "type": ["string", "null"] },
+          "newValue": { "type": ["string", "null"] },
+          "changedBy": { "type": "string", "format": "uuid" },
+          "reason": { "type": ["string", "null"] },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Comment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "authorId": { "type": "string", "format": "uuid" },
+          "authorName": { "type": "string" },
+          "body": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "integer" },
+          "pageSize": { "type": "integer" },
+          "total": { "type": "integer" },
+          "totalPages": { "type": "integer" }
+        }
+      },
+      "DashboardSummary": {
+        "type": "object",
+        "properties": {
+          "byStatus": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": { "$ref": "#/components/schemas/IncidentStatus" },
+                "count": { "type": "integer" }
+              }
+            }
+          },
+          "byCategory": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "format": "uuid" },
+                "name": { "type": "string" },
+                "count": { "type": "integer" }
+              }
+            }
+          },
+          "byPriority": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": { "$ref": "#/components/schemas/IncidentPriority" },
+                "count": { "type": "integer" }
+              }
+            }
+          },
+          "averageResolutionSeconds": { "type": ["number", "null"] },
+          "overdue": { "type": "null" },
+          "ratings": {
+            "type": "object",
+            "properties": {
+              "average": { "type": ["number", "null"] },
+              "distribution": {
+                "type": ["object", "null"],
+                "additionalProperties": { "type": "integer" }
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -157,8 +270,34 @@
       "get": {
         "security": [],
         "responses": {
-          "200": { "description": "Healthy" },
-          "503": { "description": "Database unavailable" }
+          "200": {
+            "description": "Healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "const": "ok" },
+                    "database": { "const": "up" }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "const": "degraded" },
+                    "database": { "const": "down" }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -228,10 +367,41 @@
       }
     },
     "/me": {
-      "get": { "responses": { "200": { "description": "Current user" } } }
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Current user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "401": { "description": "Authentication required" }
+        }
+      }
     },
     "/categories": {
-      "get": { "responses": { "200": { "description": "Active categories" } } }
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Active categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Category" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "/incidents": {
       "get": {
@@ -290,7 +460,26 @@
             }
           }
         ],
-        "responses": { "200": { "description": "Paginated incidents" } }
+        "responses": {
+          "200": {
+            "description": "Paginated incidents",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Incident" }
+                    },
+                    "meta": { "$ref": "#/components/schemas/PaginationMeta" }
+                  }
+                }
+              }
+            }
+          },
+          "422": { "description": "Invalid filter" }
+        }
       },
       "post": {
         "requestBody": {
@@ -312,7 +501,14 @@
       "parameters": [{ "$ref": "#/components/parameters/IncidentId" }],
       "get": {
         "responses": {
-          "200": { "description": "Incident" },
+          "200": {
+            "description": "Incident",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Incident" }
+              }
+            }
+          },
           "404": { "description": "Not visible" }
         }
       }
@@ -320,12 +516,50 @@
     "/incidents/{id}/history": {
       "parameters": [{ "$ref": "#/components/parameters/IncidentId" }],
       "get": {
-        "responses": { "200": { "description": "Chronological audit history" } }
+        "responses": {
+          "200": {
+            "description": "Chronological audit history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/HistoryEntry" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Incident not found" }
+        }
       }
     },
     "/incidents/{id}/comments": {
       "parameters": [{ "$ref": "#/components/parameters/IncidentId" }],
-      "get": { "responses": { "200": { "description": "Comments" } } },
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Comments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Comment" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Incident not found" }
+        }
+      },
       "post": {
         "requestBody": {
           "required": true,
@@ -375,7 +609,23 @@
       ],
       "get": {
         "responses": {
-          "200": { "description": "Image contents" },
+          "200": {
+            "description": "Image contents",
+            "headers": {
+              "Content-Disposition": { "schema": { "type": "string" } }
+            },
+            "content": {
+              "image/jpeg": {
+                "schema": { "type": "string", "format": "binary" }
+              },
+              "image/png": {
+                "schema": { "type": "string", "format": "binary" }
+              },
+              "image/webp": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
           "404": { "description": "Not found" }
         }
       }
@@ -453,7 +703,32 @@
       }
     },
     "/dashboard/summary": {
-      "get": { "responses": { "200": { "description": "Manager dashboard" } } }
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "createdFrom",
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "in": "query",
+            "name": "createdTo",
+            "schema": { "type": "string", "format": "date-time" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Manager dashboard",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DashboardSummary" }
+              }
+            }
+          },
+          "403": { "description": "Manager role required" },
+          "422": { "description": "Invalid date filter" }
+        }
+      }
     }
   }
 }
