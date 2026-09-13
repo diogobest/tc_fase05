@@ -44,3 +44,7 @@ A API REST usa o prefixo `/api/v1`. O health check está em `/health`, o contrat
 O seed administrativo exige `MANAGER_PASSWORD` e cria ou atualiza o usuário configurado por `MANAGER_EMAIL`. Access tokens duram 15 minutos por padrão; refresh tokens são rotativos e revogáveis.
 
 Uploads aceitam o corpo binário da imagem (`image/jpeg`, `image/png` ou `image/webp`) e o nome opcional no header `X-File-Name`. Cada ocorrência aceita até cinco imagens de 5 MB, armazenadas no diretório configurado em `UPLOAD_DIRECTORY`.
+
+### update swagger
+
+`bun run openapi:validate`

@@ -10,8 +10,9 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - "uploads:/app/uploads"
-    working_dir: "/app"
+      - ".:/api"
+      - "uploads:/api/uploads"
+    working_dir: "/api"
   db:
     image: postgres:18
     env_file:

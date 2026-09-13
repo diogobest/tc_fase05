@@ -392,6 +392,7 @@ export function createApp(
         values.push(value);
         where.push(sql.replace("?", `$${values.length}`));
       };
+
       if (req.auth!.role === "requester")
         add("i.requester_id=?", req.auth!.userId);
       if (req.query.status)
@@ -406,6 +407,7 @@ export function createApp(
         add("i.created_at>=?", string(req.query.createdFrom, "createdFrom"));
       if (req.query.createdTo)
         add("i.created_at<=?", string(req.query.createdTo, "createdTo"));
+
       const clause = where.length ? `WHERE ${where.join(" AND ")}` : "";
       const count = await pool.query(
         `SELECT count(*) FROM incidents i ${clause}`,
