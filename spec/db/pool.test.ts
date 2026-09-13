@@ -32,10 +32,12 @@ describe("Pool", () => {
   });
 
   it("selects the database from NODE_ENV", () => {
-    expect(createPool({ NODE_ENV: "test" }).options.database)
-      .toBe("tc_db_test");
+    expect(createPool({ NODE_ENV: "test" }).options.database).toBe(
+      "tc_db_test",
+    );
 
-    expect(createPool({ NODE_ENV: "production" }).options.database)
-      .toBe("tc_db_prod");
+    expect(createPool({ NODE_ENV: "production" }).options.database).toBe(
+      "tc_db_prod",
+    );
   });
 });

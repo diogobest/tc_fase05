@@ -17,7 +17,8 @@
     "@types/bun": "latest",
     "@types/express": "^5.0.6",
     "@types/node": "^22.20.2",
-    "@types/pg": "^8.23.1"
+    "@types/pg": "^8.23.1",
+    "prettier": "3.9.6"
   },
   "peerDependencies": {
     "typescript": "^7.0.2"

@@ -16,7 +16,10 @@ export async function ensureTestDatabase(env = process.env): Promise<void> {
 
   await client.connect();
   try {
-    const result = await client.query("SELECT 1 FROM pg_database WHERE datname = $1", [database]);
+    const result = await client.query(
+      "SELECT 1 FROM pg_database WHERE datname = $1",
+      [database],
+    );
     if (!result.rowCount) {
       await client.query(`CREATE DATABASE "${database}"`);
     }

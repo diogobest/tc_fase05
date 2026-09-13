@@ -1,4 +1,12 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "bun:test";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "bun:test";
 import type { PoolClient } from "pg";
 import pool from "../../db/pool.ts";
 import { migrate } from "../../db/migrate.ts";
@@ -50,7 +58,9 @@ async function incident(requesterId: string, assigneeId?: string) {
 
 describe("initial database schema", () => {
   it("seeds all initial categories", async () => {
-    const result = await client!.query<{ count: string }>("SELECT count(*) FROM categories");
+    const result = await client!.query<{ count: string }>(
+      "SELECT count(*) FROM categories",
+    );
     expect(Number(result.rows[0]!.count)).toBe(8);
   });
 
@@ -63,11 +73,13 @@ describe("initial database schema", () => {
       [incidentId],
     );
 
-    expect(result.rows).toEqual([{
-      previous_status: null,
-      new_status: "open",
-      changed_by: requesterId,
-    }]);
+    expect(result.rows).toEqual([
+      {
+        previous_status: null,
+        new_status: "open",
+        changed_by: requesterId,
+      },
+    ]);
   });
 
   it("only permits active managers as assignees", async () => {
@@ -81,7 +93,9 @@ describe("initial database schema", () => {
     const requesterId = await user("requester");
     const incidentId = await incident(requesterId);
     await expect(
-      client!.query("DELETE FROM status_history WHERE incident_id = $1", [incidentId]),
+      client!.query("DELETE FROM status_history WHERE incident_id = $1", [
+        incidentId,
+      ]),
     ).rejects.toThrow("status_history is append-only");
   });
 

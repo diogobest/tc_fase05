@@ -10,14 +10,14 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - 'uploads:/app/uploads'
-    working_dir: '/app'
+      - "uploads:/app/uploads"
+    working_dir: "/app"
   db:
     image: postgres:18
     env_file:
       - .env
     volumes:
-      - 'pg_data:/var/lib/postgresql'
+      - "pg_data:/var/lib/postgresql"
     shm_size: 128mb
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]

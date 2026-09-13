@@ -65,14 +65,14 @@ Controllers devem tratar HTTP, serviços/casos de uso devem aplicar regras, e re
 
 Estados: `open`, `under_review`, `in_progress`, `resolved`, `cancelled`.
 
-| Origem | Destino | Regra |
-|---|---|---|
-| `open` | `under_review` | gestor inicia a análise |
-| `under_review` | `in_progress` | gestor inicia o atendimento |
-| `in_progress` | `resolved` | gestor informa a solução aplicada |
-| `open` | `cancelled` | gestor informa observação obrigatória |
-| `under_review` | `cancelled` | gestor informa observação obrigatória |
-| `in_progress` | `cancelled` | gestor informa observação obrigatória |
+| Origem         | Destino        | Regra                                 |
+| -------------- | -------------- | ------------------------------------- |
+| `open`         | `under_review` | gestor inicia a análise               |
+| `under_review` | `in_progress`  | gestor inicia o atendimento           |
+| `in_progress`  | `resolved`     | gestor informa a solução aplicada     |
+| `open`         | `cancelled`    | gestor informa observação obrigatória |
+| `under_review` | `cancelled`    | gestor informa observação obrigatória |
+| `in_progress`  | `cancelled`    | gestor informa observação obrigatória |
 
 `resolved` e `cancelled` são finais. Cada transição grava, de forma atômica, status anterior, novo status, data/hora, usuário responsável e observação. Na criação, registrar um evento inicial com `previous_status = null` e `new_status = open`.
 
@@ -89,18 +89,18 @@ Estados: `open`, `under_review`, `in_progress`, `resolved`, `cancelled`.
 
 ## 4. Modelo de dados inicial
 
-| Tabela | Campos essenciais |
-|---|---|
-| `users` | `id`, `name`, `email` único, `password_hash`, `role`, `active`, timestamps |
-| `refresh_tokens` | `id`, `user_id`, `token_hash`, `expires_at`, `revoked_at`, timestamps |
-| `categories` | `id`, `name`, `slug` único, `active`, timestamps |
-| `incidents` | `id`, `requester_id`, `assignee_id`, `category_id`, `title`, `description`, localização, `status`, `priority`, `solution`, `resolved_at`, timestamps, `version` |
-| `attachments` | `id`, `incident_id`, `uploaded_by`, `object_key`, `file_name`, `mime_type`, `size`, timestamps |
-| `comments` | `id`, `incident_id`, `author_id`, `body`, timestamps |
-| `status_history` | `id`, `incident_id`, `previous_status`, `new_status`, `changed_by`, `observation`, `created_at` |
-| `assignment_history` | `id`, `incident_id`, `previous_assignee_id`, `new_assignee_id`, `changed_by`, `reason`, `created_at` |
-| `priority_history` | `id`, `incident_id`, `previous_priority`, `new_priority`, `changed_by`, `reason`, `created_at` |
-| `ratings` | `id`, `incident_id` único, `requester_id`, `score`, `comment`, timestamps |
+| Tabela               | Campos essenciais                                                                                                                                               |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `users`              | `id`, `name`, `email` único, `password_hash`, `role`, `active`, timestamps                                                                                      |
+| `refresh_tokens`     | `id`, `user_id`, `token_hash`, `expires_at`, `revoked_at`, timestamps                                                                                           |
+| `categories`         | `id`, `name`, `slug` único, `active`, timestamps                                                                                                                |
+| `incidents`          | `id`, `requester_id`, `assignee_id`, `category_id`, `title`, `description`, localização, `status`, `priority`, `solution`, `resolved_at`, timestamps, `version` |
+| `attachments`        | `id`, `incident_id`, `uploaded_by`, `object_key`, `file_name`, `mime_type`, `size`, timestamps                                                                  |
+| `comments`           | `id`, `incident_id`, `author_id`, `body`, timestamps                                                                                                            |
+| `status_history`     | `id`, `incident_id`, `previous_status`, `new_status`, `changed_by`, `observation`, `created_at`                                                                 |
+| `assignment_history` | `id`, `incident_id`, `previous_assignee_id`, `new_assignee_id`, `changed_by`, `reason`, `created_at`                                                            |
+| `priority_history`   | `id`, `incident_id`, `previous_priority`, `new_priority`, `changed_by`, `reason`, `created_at`                                                                  |
+| `ratings`            | `id`, `incident_id` único, `requester_id`, `score`, `comment`, timestamps                                                                                       |
 
 Localização deve começar com `address` e `details`, podendo incluir `latitude` e `longitude`. Índices mínimos: e-mail, status, prioridade, categoria, solicitante, responsável e data de criação. Usar UUIDs, foreign keys, checks e unicidade no banco, não apenas na aplicação.
 
@@ -110,40 +110,40 @@ Prefixo: `/api/v1`. JSON usa nomes em `camelCase` e enums estáveis em inglês; 
 
 ### Plataforma e autenticação
 
-| Método | Rota | Acesso | Finalidade |
-|---|---|---|---|
-| `GET` | `/health` | público | estado do processo e do banco |
-| `POST` | `/auth/register` | público | criar solicitante |
-| `POST` | `/auth/login` | público | obter access e refresh token |
-| `POST` | `/auth/refresh` | público com refresh token | rotacionar tokens |
-| `POST` | `/auth/logout` | autenticado | revogar refresh token |
-| `GET` | `/me` | autenticado | retornar usuário atual |
-| `GET` | `/categories` | autenticado | listar categorias ativas |
+| Método | Rota             | Acesso                    | Finalidade                    |
+| ------ | ---------------- | ------------------------- | ----------------------------- |
+| `GET`  | `/health`        | público                   | estado do processo e do banco |
+| `POST` | `/auth/register` | público                   | criar solicitante             |
+| `POST` | `/auth/login`    | público                   | obter access e refresh token  |
+| `POST` | `/auth/refresh`  | público com refresh token | rotacionar tokens             |
+| `POST` | `/auth/logout`   | autenticado               | revogar refresh token         |
+| `GET`  | `/me`            | autenticado               | retornar usuário atual        |
+| `GET`  | `/categories`    | autenticado               | listar categorias ativas      |
 
 ### Ocorrências e colaboração
 
-| Método | Rota | Acesso | Finalidade |
-|---|---|---|---|
-| `POST` | `/incidents` | solicitante | criar ocorrência |
-| `GET` | `/incidents` | autenticado | solicitante vê as suas; gestor vê todas e usa filtros |
-| `GET` | `/incidents/:id` | participante autorizado | detalhes da ocorrência |
-| `GET` | `/incidents/:id/history` | participante autorizado | histórico cronológico |
-| `POST` | `/incidents/:id/comments` | participante autorizado | adicionar comentário |
-| `GET` | `/incidents/:id/comments` | participante autorizado | listar comentários |
-| `POST` | `/incidents/:id/attachments` | solicitante proprietário | enviar imagem |
-| `GET` | `/incidents/:id/attachments/:attachmentId` | participante autorizado | obter URL temporária/download |
-| `POST` | `/incidents/:id/rating` | solicitante proprietário | avaliar ocorrência resolvida |
+| Método | Rota                                       | Acesso                   | Finalidade                                            |
+| ------ | ------------------------------------------ | ------------------------ | ----------------------------------------------------- |
+| `POST` | `/incidents`                               | solicitante              | criar ocorrência                                      |
+| `GET`  | `/incidents`                               | autenticado              | solicitante vê as suas; gestor vê todas e usa filtros |
+| `GET`  | `/incidents/:id`                           | participante autorizado  | detalhes da ocorrência                                |
+| `GET`  | `/incidents/:id/history`                   | participante autorizado  | histórico cronológico                                 |
+| `POST` | `/incidents/:id/comments`                  | participante autorizado  | adicionar comentário                                  |
+| `GET`  | `/incidents/:id/comments`                  | participante autorizado  | listar comentários                                    |
+| `POST` | `/incidents/:id/attachments`               | solicitante proprietário | enviar imagem                                         |
+| `GET`  | `/incidents/:id/attachments/:attachmentId` | participante autorizado  | obter URL temporária/download                         |
+| `POST` | `/incidents/:id/rating`                    | solicitante proprietário | avaliar ocorrência resolvida                          |
 
 Filtros de `GET /incidents`: `status`, `categoryId`, `priority`, `assigneeId`, `createdFrom`, `createdTo`, `page`, `pageSize`, `sort`. O retorno paginado usa `{ data, meta: { page, pageSize, total, totalPages } }`.
 
 ### Administração da ocorrência
 
-| Método | Rota | Acesso | Finalidade |
-|---|---|---|---|
-| `PATCH` | `/incidents/:id/priority` | gestor | alterar prioridade com justificativa |
-| `PATCH` | `/incidents/:id/assignee` | gestor | atribuir/reatribuir responsável com justificativa |
-| `POST` | `/incidents/:id/transitions` | gestor | executar uma transição de status |
-| `GET` | `/dashboard/summary` | gestor | indicadores filtrados por período |
+| Método  | Rota                         | Acesso | Finalidade                                        |
+| ------- | ---------------------------- | ------ | ------------------------------------------------- |
+| `PATCH` | `/incidents/:id/priority`    | gestor | alterar prioridade com justificativa              |
+| `PATCH` | `/incidents/:id/assignee`    | gestor | atribuir/reatribuir responsável com justificativa |
+| `POST`  | `/incidents/:id/transitions` | gestor | executar uma transição de status                  |
+| `GET`   | `/dashboard/summary`         | gestor | indicadores filtrados por período                 |
 
 Corpo da transição: `{ "to": "under_review", "observation": "...", "solution": null }`. Usar um endpoint de comando evita que um `PATCH` genérico contorne a máquina de estados.
 

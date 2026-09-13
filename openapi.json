@@ -1,33 +1,202 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "Resolve Aí API", "version": "1.0.0", "description": "Incident management API. All dates are UTC ISO 8601 values." },
+  "info": {
+    "title": "Resolve Aí API",
+    "version": "1.0.0",
+    "description": "Incident management API. All dates are UTC ISO 8601 values."
+  },
   "servers": [{ "url": "/api/v1" }],
   "security": [{ "bearerAuth": [] }],
   "components": {
-    "securitySchemes": { "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" } },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
     "schemas": {
-      "Error": { "type": "object", "required": ["error"], "properties": { "error": { "type": "object", "required": ["code", "message", "details", "requestId"], "properties": { "code": {"type":"string"}, "message":{"type":"string"}, "details":{"type":"array"}, "requestId":{"type":"string"} } } } },
-      "Incident": { "type":"object", "properties": { "id":{"type":"string","format":"uuid"}, "title":{"type":"string"}, "description":{"type":"string"}, "status":{"enum":["open","under_review","in_progress","resolved","cancelled"]}, "priority":{"enum":["low","medium","high","critical"]}, "version":{"type":"integer"} } }
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["code", "message", "details", "requestId"],
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" },
+              "details": { "type": "array" },
+              "requestId": { "type": "string" }
+            }
+          }
+        }
+      },
+      "Incident": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "status": {
+            "enum": [
+              "open",
+              "under_review",
+              "in_progress",
+              "resolved",
+              "cancelled"
+            ]
+          },
+          "priority": { "enum": ["low", "medium", "high", "critical"] },
+          "version": { "type": "integer" }
+        }
+      }
     }
   },
   "paths": {
-    "/health": { "get": { "security": [], "responses": { "200": { "description": "Healthy" }, "503":{"description":"Database unavailable"} } } },
-    "/auth/register": { "post": { "security": [], "responses": { "201":{"description":"Requester created"}, "409":{"description":"Email exists"} } } },
-    "/auth/login": { "post": { "security": [], "responses": { "200":{"description":"Tokens"}, "401":{"description":"Invalid credentials"} } } },
-    "/auth/refresh": { "post": { "security": [], "responses": { "200":{"description":"Rotated tokens"} } } },
-    "/auth/logout": { "post": { "responses": { "204":{"description":"Logged out"} } } },
-    "/me": { "get": { "responses": { "200":{"description":"Current user"} } } },
-    "/categories": { "get": { "responses": { "200":{"description":"Active categories"} } } },
-    "/incidents": { "get": { "parameters":[{"in":"query","name":"page","schema":{"type":"integer"}},{"in":"query","name":"pageSize","schema":{"type":"integer"}},{"in":"query","name":"status","schema":{"type":"string"}}], "responses":{"200":{"description":"Paginated incidents"}} }, "post":{"responses":{"201":{"description":"Incident created"}}} },
-    "/incidents/{id}": { "get": { "parameters":[{"in":"path","name":"id","required":true,"schema":{"type":"string","format":"uuid"}}], "responses":{"200":{"description":"Incident"},"404":{"description":"Not visible"}} } },
-    "/incidents/{id}/history": { "get":{"responses":{"200":{"description":"Chronological audit history"}}} },
-    "/incidents/{id}/comments": { "get":{"responses":{"200":{"description":"Comments"}}},"post":{"responses":{"201":{"description":"Comment created"}}} },
-    "/incidents/{id}/attachments": { "post":{"requestBody":{"required":true,"content":{"image/jpeg":{"schema":{"type":"string","format":"binary"}},"image/png":{"schema":{"type":"string","format":"binary"}},"image/webp":{"schema":{"type":"string","format":"binary"}}}},"responses":{"201":{"description":"Attachment uploaded"},"413":{"description":"Too large"},"415":{"description":"Invalid image"}}} },
-    "/incidents/{id}/attachments/{attachmentId}": { "get":{"responses":{"200":{"description":"Image contents"},"404":{"description":"Not found"}}} },
-    "/incidents/{id}/rating": { "post":{"responses":{"201":{"description":"Rating created"},"409":{"description":"Invalid state or duplicate"}}} },
-    "/incidents/{id}/priority": { "patch":{"responses":{"200":{"description":"Priority changed"},"409":{"description":"Version conflict"}}} },
-    "/incidents/{id}/assignee": { "patch":{"responses":{"200":{"description":"Assignee changed"},"409":{"description":"Version conflict"}}} },
-    "/incidents/{id}/transitions": { "post":{"responses":{"200":{"description":"Status changed"},"409":{"description":"Invalid transition or version conflict"}}} },
-    "/dashboard/summary": { "get":{"responses":{"200":{"description":"Manager dashboard"}}} }
+    "/health": {
+      "get": {
+        "security": [],
+        "responses": {
+          "200": { "description": "Healthy" },
+          "503": { "description": "Database unavailable" }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "security": [],
+        "responses": {
+          "201": { "description": "Requester created" },
+          "409": { "description": "Email exists" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "security": [],
+        "responses": {
+          "200": { "description": "Tokens" },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "security": [],
+        "responses": { "200": { "description": "Rotated tokens" } }
+      }
+    },
+    "/auth/logout": {
+      "post": { "responses": { "204": { "description": "Logged out" } } }
+    },
+    "/me": {
+      "get": { "responses": { "200": { "description": "Current user" } } }
+    },
+    "/categories": {
+      "get": { "responses": { "200": { "description": "Active categories" } } }
+    },
+    "/incidents": {
+      "get": {
+        "parameters": [
+          { "in": "query", "name": "page", "schema": { "type": "integer" } },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "schema": { "type": "integer" }
+          },
+          { "in": "query", "name": "status", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Paginated incidents" } }
+      },
+      "post": { "responses": { "201": { "description": "Incident created" } } }
+    },
+    "/incidents/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Incident" },
+          "404": { "description": "Not visible" }
+        }
+      }
+    },
+    "/incidents/{id}/history": {
+      "get": {
+        "responses": { "200": { "description": "Chronological audit history" } }
+      }
+    },
+    "/incidents/{id}/comments": {
+      "get": { "responses": { "200": { "description": "Comments" } } },
+      "post": { "responses": { "201": { "description": "Comment created" } } }
+    },
+    "/incidents/{id}/attachments": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "image/jpeg": {
+              "schema": { "type": "string", "format": "binary" }
+            },
+            "image/png": { "schema": { "type": "string", "format": "binary" } },
+            "image/webp": { "schema": { "type": "string", "format": "binary" } }
+          }
+        },
+        "responses": {
+          "201": { "description": "Attachment uploaded" },
+          "413": { "description": "Too large" },
+          "415": { "description": "Invalid image" }
+        }
+      }
+    },
+    "/incidents/{id}/attachments/{attachmentId}": {
+      "get": {
+        "responses": {
+          "200": { "description": "Image contents" },
+          "404": { "description": "Not found" }
+        }
+      }
+    },
+    "/incidents/{id}/rating": {
+      "post": {
+        "responses": {
+          "201": { "description": "Rating created" },
+          "409": { "description": "Invalid state or duplicate" }
+        }
+      }
+    },
+    "/incidents/{id}/priority": {
+      "patch": {
+        "responses": {
+          "200": { "description": "Priority changed" },
+          "409": { "description": "Version conflict" }
+        }
+      }
+    },
+    "/incidents/{id}/assignee": {
+      "patch": {
+        "responses": {
+          "200": { "description": "Assignee changed" },
+          "409": { "description": "Version conflict" }
+        }
+      }
+    },
+    "/incidents/{id}/transitions": {
+      "post": {
+        "responses": {
+          "200": { "description": "Status changed" },
+          "409": { "description": "Invalid transition or version conflict" }
+        }
+      }
+    },
+    "/dashboard/summary": {
+      "get": { "responses": { "200": { "description": "Manager dashboard" } } }
+    }
   }
 }
