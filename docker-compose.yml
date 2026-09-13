@@ -1,0 +1,30 @@
+services:
+  api:
+    build: .
+    command: sh -c "bun run db:migrate && bun run db:seed && bun run start"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - 3000:3000
+    volumes:
+      - 'uploads:/app/uploads'
+    working_dir: '/app'
+  db:
+    image: postgres:18
+    env_file:
+      - .env
+    volumes:
+      - 'pg_data:/var/lib/postgresql'
+    shm_size: 128mb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  pg_data:
+  uploads:

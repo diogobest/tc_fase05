@@ -1,29 +1,30 @@
 {
-  "name": "tc_fase05",
-  "version": "1.0.0",
-  "description": "Hackaton postech",
-  "homepage": "https://github.com/diogobest/tc_fase05#readme",
-  "bugs": {
-    "url": "https://github.com/diogobest/tc_fase05/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/diogobest/tc_fase05.git"
-  },
-  "license": "MIT",
-  "author": "Diogo Oliveira",
+  "name": "Resolve aí",
+  "module": "src/app.ts",
   "type": "module",
-  "main": "src/app.ts",
+  "private": true,
   "scripts": {
-    "start": "PORT=3005 node src/app.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "dependencies": {
-    "express": "^5.2.1"
+    "start": "bun run src/server.ts",
+    "dev": "bun --watch src/server.ts",
+    "db:migrate": "bun run db/migrate.ts",
+    "db:seed": "bun run db/seed.ts",
+    "openapi:validate": "bun run scripts/validate-openapi.ts",
+    "lint": "bun run typecheck",
+    "test": "NODE_ENV=test bun test",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/bun": "latest",
     "@types/express": "^5.0.6",
-    "@types/node": "^26.5.0",
+    "@types/node": "^22.20.2",
+    "@types/pg": "^8.23.1"
+  },
+  "peerDependencies": {
     "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "jest": "^30.5.1",
+    "pg": "^8.23.0"
   }
 }
